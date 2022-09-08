@@ -1,3 +1,15 @@
 __pycache__
-Files
-Processed
+*.jpg
+*.png
+*.tiff
+*.jfif
+*.mp4
+*.avi
+.env
+*.bin
+*.xml
+*.txt
+venv
+.vscode
+!Test_1.png
+!requirements.txt

@@ -1,54 +1,39 @@
 import os
 import sys
 import cv2
+import argparse
 import pytesseract
 
 # Path to tesseract executable
-pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = os.path.join(os.environ.get("TESSERACT_PATH"), "tesseract.exe")
 
-READ_PATH = "Files"
-SAVE_PATH = "Processed"
+INPUT_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input")
+OUTPUT_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 
-if not os.path.exists(SAVE_PATH):
-    os.makedirs(SAVE_PATH)
-
-
-def breaker(num: int=50, char: str="*") -> None:
-    print("\n" + num*char + "\n")
-
+def breaker(num: int=50, char: str="*") -> None: print("\n" + num*char + "\n")
 
 def main():
 
-    args_1: tuple = ("--file", "-f")
-    args_2: tuple = ("--timeout", "-t")
-    args_3: tuple = ("--save", "-s")
-    
-    filename: str = None
-    timeout: float = 5.0
-    save: bool = False
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--filename", "-f", default="Test_1.png", help="Filename of the image file")
+    parser.add_argument("--timeout", "-t", type=float, default=10.0, help="Max time after which to quit the OCR process")
+    parser.add_argument("--save", "-s", action="store_true", help="Flag to save the detected text")
+    args = parser.parse_args()
 
-    if args_1[0] in sys.argv: filename = sys.argv[sys.argv.index(args_1[0]) + 1]
-    if args_1[1] in sys.argv: filename = sys.argv[sys.argv.index(args_1[1]) + 1]
+    assert args.filename in os.listdir(INPUT_PATH), "File not found in input directory"
 
-    if args_2[0] in sys.argv: timeout = float(sys.argv[sys.argv.index(args_2[0]) + 1])
-    if args_2[1] in sys.argv: timeout = float(sys.argv[sys.argv.index(args_2[1]) + 1])
-
-    if args_3[0] in sys.argv or args_3[1] in sys.argv: save = True
-
-    assert filename is not None, "No file specified"
-
-    image = cv2.cvtColor(src=cv2.imread(os.path.join(READ_PATH, filename), cv2.IMREAD_COLOR), code=cv2.COLOR_BGR2RGB)
+    image = cv2.cvtColor(src=cv2.imread(os.path.join(INPUT_PATH, args.filename), cv2.IMREAD_COLOR), code=cv2.COLOR_BGR2RGB)
 
     try:
-        data = pytesseract.image_to_string(image, timeout=timeout)
+        data = pytesseract.image_to_string(image, timeout=args.timeout)
     except:
         breaker()
         print("Timeout Error")
         breaker()
     
-    if save:
-        with open(os.path.join(SAVE_PATH, "output.txt"), "w+") as fp:
-            fp.write(data)
+
+    if args.save:
+        with open(os.path.join(OUTPUT_PATH, "output.txt"), "w+") as fp: fp.write(data)
     else:
         breaker()
         print(data)
